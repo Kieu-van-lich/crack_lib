@@ -13,8 +13,8 @@ Kho lưu trữ này chứa các phiên bản phân tích dịch ngược, can th
 | `libtgpa_V3.so` | 2,824,960 bytes | Patch 4 hàm xác thực online cơ bản (`isKeyValid`, `isKeyExpired`, ...) |
 | `libtgpa_V4.so` | 2,824,960 bytes | Patch 7 vị trí (triệt tiêu phản hồi lỗi từ server HTTP) |
 | `libtgpa_V5.so` | 2,824,960 bytes | Bản can thiệp ngắt sớm Auth Controller (Gây lỗi Crash do Stack) |
-| `libtgpa_V6.so` | 2,824,960 bytes | Bản can thiệp ngắt sớm Auth State (Gây hiện tượng ẩn 2 Menu) |
-| `libtgpa_V7.so` | 2,824,960 bytes | Bản hoàn thiện (Sửa lỗi ẩn Menu + Bypass xác thực Key & Socket) |
+| `libtgpa_V6.so` | 2,824,960 bytes | Bản sửa crash (Gặp lỗi ẩn cả 2 Menu do cờ Auth State 0x1afd20) |
+| `libtgpa_V7.so` | 2,824,960 bytes | Bản **V7 Fixed Hoàn Thiện**: Khôi phục cờ State Controller, patch Socket Bypass `0x23b3fc` & `0x23b420` để hiển thị trực tiếp Menu Hack |
 
 ---
 
@@ -47,22 +47,28 @@ Kho lưu trữ này chứa các phiên bản phân tích dịch ngược, can th
 - **Nguyên nhân**:
   - Tại bản V5, hàm khởi tạo Auth Controller (`0x1afad4`) bị can thiệp lệnh `ret` ngay tại đầu hàm (`mov w0, #1 ; ret`).
   - Việc thoát hàm quá sớm làm bỏ qua quá trình thiết lập Stack Frame và không khởi tạo các biến con trỏ (`x23`, `x24`, `x28`). Khi hàm cha tiếp tục thực thi và truy xuất các con trỏ này, ứng dụng bị lỗi truy cập bộ nhớ (`Null Pointer / Memory Access Violation`) dẫn đến crash game.
-- **Cách khắc phục (Bản V6 Hoàn Thiện)**:
-  - **Khôi phục toàn bộ Stack Frame**: Để hàm `0x1afad4` khởi tạo đầy đủ các con trỏ bộ nhớ và cấu trúc dữ liệu theo đúng luồng tự nhiên.
-  - **Can thiệp vào State Transition nội bộ**: Patch tại offset `0x1afd20`: `csel w8, w20, w28, al` (`08 02 9c 9a`).
-  - Lệnh này ép biến trạng thái nội bộ của Auth Controller luôn chuyển sang trạng thái thành công (`w20`), vừa vô hiệu hóa bảng nhập key, vừa đảm bảo tính toàn vẹn của bộ nhớ giúp **Game chạy ổn định 100% không bị văng**.
 
 ---
 
-## 🛠️ Tổng Hợp 8 Mã Máy ARM64 Master (Bản V6)
+### 4. Lỗi Ẩn Cả Menu Login Nhập Key & Menu Hack (Bản V6 Cũ)
+- **Hiện tượng**: Ở bản V6 cũ, khi mở game thì bảng nhập Key và Menu Hack đều bị ẩn khỏi màn hình.
+- **Nguyên nhân**:
+  - Lệnh `csel w8, w20, w28, al` tại offset `0x1afd20` đã ép trạng thái nội bộ của Controller về nhánh ngắt UI rendering. Cờ hiển thị cửa sổ đồ họa ImGui bị đặt về `false / Hidden`, khiến bộ render OpenGL bỏ qua toàn bộ lệnh vẽ giao diện (`ImGui::Begin()`).
+- **Cách khắc phục (Bản V7 Fixed)**:
+  - **Khôi phục State Controller**: Bỏ patch `0x1afd20`, giữ nguyên cấu trúc khởi tạo Stack Frame và luồng hiển thị giao diện ImGui.
+  - **Patch Socket Bypass & State Machine direct**:
+    - Patch `0x23b3fc`: `cmp wzr, wzr` (`ff 03 1f 6b`) -> Ép cờ so sánh socket kết nối luôn đúng.
+    - Patch `0x23b420`: `mov w8, w9` (`e8 03 09 2a`) -> Bắt buộc ImGui State Machine chuyển thẳng sang giao diện Menu Hack chính mà không hiển thị bảng đăng nhập key nữa.
+
+---
+
+## 🛠️ Tổng Hợp Mã Máy ARM64 Master (Bản V7 Fixed)
 
 ```asm
 1. [0x1b1ae4 - isKeyValid]          : 20 00 80 52 c0 03 5f d6 (mov w0, #1 ; ret)
 2. [0x1b7f50 - isKeyExpired]        : 00 00 80 52 c0 03 5f d6 (mov w0, #0 ; ret)
 3. [0x1b82d4 - verifyKeyOnline]     : 20 00 80 52 c0 03 5f d6 (mov w0, #1 ; ret)
 4. [0x1b8558 - checkLicenseKey]     : 20 00 80 52 c0 03 5f d6 (mov w0, #1 ; ret)
-5. [0x1b9618 - Master Auth Eval]    : 08 00 80 52             (mov w8, #0)
-6. [0x1b90f4 - Server Response Eval]: 08 00 80 52             (mov w8, #0)
-7. [0x1b8ac0 - ImGui State Machine] : 08 01 88 9a             (csel w8, w9, w8, al)
-8. [0x1afd20 - Auth State Internal] : 08 02 9c 9a             (csel w8, w20, w28, al)
+5. [0x23b3fc - Socket Flag Compare] : ff 03 1f 6b             (cmp wzr, wzr)
+6. [0x23b420 - State Machine Direct]: e8 03 09 2a             (mov w8, w9)
 ```
