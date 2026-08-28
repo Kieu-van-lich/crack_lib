@@ -13,7 +13,8 @@ Kho lưu trữ này chứa các phiên bản phân tích dịch ngược, can th
 | `libtgpa_V3.so` | 2,824,960 bytes | Patch 4 hàm xác thực online cơ bản (`isKeyValid`, `isKeyExpired`, ...) |
 | `libtgpa_V4.so` | 2,824,960 bytes | Patch 7 vị trí (triệt tiêu phản hồi lỗi từ server HTTP) |
 | `libtgpa_V5.so` | 2,824,960 bytes | Bản can thiệp ngắt sớm Auth Controller (Gây lỗi Crash do Stack) |
-| `libtgpa_V6.so` | 2,824,960 bytes | Bản hoàn thiện (Khắc phục lỗi Crash + Vô hiệu hóa Key Dialog) |
+| `libtgpa_V6.so` | 2,824,960 bytes | Bản can thiệp ngắt sớm Auth State (Gây hiện tượng ẩn 2 Menu) |
+| `libtgpa_V7.so` | 2,824,960 bytes | Bản hoàn thiện (Sửa lỗi ẩn Menu + Bypass xác thực Key & Socket) |
 
 ---
 
