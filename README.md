@@ -14,8 +14,7 @@ Kho lưu trữ này chứa các phiên bản phân tích dịch ngược, can th
 | `libtgpa_V4.so` | 2,824,960 bytes | Patch 7 vị trí (triệt tiêu phản hồi lỗi từ server HTTP) |
 | `libtgpa_V5.so` | 2,824,960 bytes | Bản can thiệp ngắt sớm Auth Controller (Gây lỗi Crash do Stack) |
 | `libtgpa_V6.so` | 2,824,960 bytes | Bản sửa crash (Gặp lỗi ẩn cả 2 Menu do cờ Auth State 0x1afd20) |
-| `libtgpa_V7.so` | 2,824,960 bytes | Bản thử nghiệm (Khôi phục State Controller nhưng vẫn vướng cờ lỗi HTTP "KEY Không Tồn Tại") |
-| `libtgpa_V8.so` | 2,824,960 bytes | **Bản Master hoàn chỉnh 100%** (Bypass toàn bộ bảng nhập Key + Triệt tiêu lỗi HTTP + Mở trực tiếp Menu Hack) |
+| `libtgpa_V7.so` | 2,824,960 bytes | Bản **V7 Fixed Hoàn Thiện**: Khôi phục cờ State Controller, patch Socket Bypass `0x23b3fc` & `0x23b420` để hiển thị trực tiếp Menu Hack |
 
 ---
 
